@@ -9,8 +9,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["SUPER_ADMIN", "ADMIN"],
       default: "ADMIN",
-      immutable: true // 🔒 role change via update block
-    }
+      immutable: true,
+    },
   },
   { timestamps: true }
 );
