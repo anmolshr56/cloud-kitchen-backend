@@ -1,20 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const Category = require("../models/Category");
-const { protect, superAdminOnly } = require("../middleware/authMiddleware");
 
-// ✅ ADD CATEGORY (SUPER_ADMIN only)
-router.post("/add", protect, superAdminOnly, async (req, res) => {
+const Category = require("../models/Category");
+const auth = require("../middleware/authMiddleware");
+
+/**
+ * ADD CATEGORY (SUPER ADMIN)
+ */
+router.post("/add", auth, async (req, res) => {
   try {
     const { name } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Category name required" });
-    }
-
-    const exists = await Category.findOne({ name });
-    if (exists) {
-      return res.status(400).json({ message: "Category already exists" });
     }
 
     const category = await Category.create({ name });
@@ -24,10 +22,16 @@ router.post("/add", protect, superAdminOnly, async (req, res) => {
   }
 });
 
-// ✅ GET ALL CATEGORIES
+/**
+ * GET ALL CATEGORIES
+ */
 router.get("/", async (req, res) => {
-  const categories = await Category.find();
-  res.json(categories);
+  try {
+    const categories = await Category.find();
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;
