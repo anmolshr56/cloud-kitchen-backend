@@ -1,28 +1,31 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order");
-const auth = require("../middleware/auth");
+const auth = require("../middleware/authMiddleware");
 
 /**
- * PLACE ORDER (Customer)
+ * PLACE ORDER (PUBLIC)
  */
 router.post("/place", async (req, res) => {
   try {
     const { customerName, customerPhone, items } = req.body;
 
+    if (!customerName || !customerPhone || !items?.length) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
     let totalAmount = 0;
-    items.forEach((item) => {
+    items.forEach(item => {
       totalAmount += item.price * item.quantity;
     });
 
-    const order = new Order({
+    const order = await Order.create({
       customerName,
       customerPhone,
       items,
       totalAmount
     });
 
-    await order.save();
     res.status(201).json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -30,25 +33,27 @@ router.post("/place", async (req, res) => {
 });
 
 /**
- * GET ALL ORDERS (Admin / Super Admin)
+ * GET ALL ORDERS (ADMIN + SUPER_ADMIN)
  */
-router.get("/", auth, async (req, res) => {
-  try {
+router.get(
+  "/",
+  auth(["ADMIN", "SUPER_ADMIN"]),
+  async (req, res) => {
     const orders = await Order.find().populate(
       "items.menuId",
       "name"
     );
     res.json(orders);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
-});
+);
 
 /**
- * 🔥 UPDATE ORDER STATUS (Admin / Super Admin)
+ * UPDATE ORDER STATUS (ADMIN + SUPER_ADMIN)
  */
-router.put("/update/:id", auth, async (req, res) => {
-  try {
+router.put(
+  "/update/:id",
+  auth(["ADMIN", "SUPER_ADMIN"]),
+  async (req, res) => {
     const { status } = req.body;
 
     const order = await Order.findById(req.params.id);
@@ -63,9 +68,7 @@ router.put("/update/:id", auth, async (req, res) => {
       message: "Order updated successfully",
       status: order.status
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
-});
+);
 
 module.exports = router;
