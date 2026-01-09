@@ -1,21 +1,19 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = function (roles = []) {
-  return (req, res, next) => {
+module.exports = (req, res, next) => {
+  try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ message: "No token" });
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      if (roles.length && !roles.includes(decoded.role)) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-
-      next();
-    } catch (err) {
-      res.status(401).json({ message: "Invalid token" });
+    if (decoded.role !== "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
     }
-  };
+
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
+  }
 };
