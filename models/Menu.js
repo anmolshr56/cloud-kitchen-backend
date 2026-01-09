@@ -5,21 +5,20 @@ const menuSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
     },
     price: {
       type: Number,
-      required: true
+      required: true,
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true
+      required: true,
     },
-    isAvailable: {
-      type: Boolean,
-      default: true
-    }
   },
   { timestamps: true }
 );
