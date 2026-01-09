@@ -54,20 +54,41 @@ router.put(
   "/update/:id",
   auth(["ADMIN", "SUPER_ADMIN"]),
   async (req, res) => {
-    const { status } = req.body;
+    try {
+      const { status } = req.body;
 
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      const allowedStatus = [
+        "PENDING",
+        "ACCEPTED",
+        "PREPARING",
+        "DELIVERED",
+        "CANCELLED"
+      ];
+
+      if (!allowedStatus.includes(status)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid order status" });
+      }
+
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      order.status = status;
+      await order.save();
+
+      res.json({
+        message: "Order updated successfully",
+        orderId: order._id,
+        status: order.status
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
     }
-
-    order.status = status;
-    await order.save();
-
-    res.json({
-      message: "Order updated successfully",
-      status: order.status
-    });
   }
 );
 
