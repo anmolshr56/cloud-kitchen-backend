@@ -1,33 +1,37 @@
 const jwt = require("jsonwebtoken");
 
 /**
- * ROLE BASED AUTH MIDDLEWARE
  * Usage:
- * auth(["SUPER_ADMIN"])
- * auth(["SUPER_ADMIN", "ADMIN"])
+ * auth() → any logged-in user
+ * auth(["ADMIN", "SUPER_ADMIN"]) → role based
  */
-module.exports = function (allowedRoles = []) {
+const auth = (allowedRoles = []) => {
   return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-
     try {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+
+      const token = authHeader.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
       req.user = decoded;
 
-      // If roles are defined, check permission
-      if (allowedRoles.length && !allowedRoles.includes(decoded.role)) {
+      // Role check (only if roles provided)
+      if (
+        allowedRoles.length > 0 &&
+        !allowedRoles.includes(decoded.role)
+      ) {
         return res.status(403).json({ message: "Access denied" });
       }
 
       next();
     } catch (err) {
-      res.status(401).json({ message: "Invalid token" });
+      return res.status(401).json({ message: "Invalid token" });
     }
   };
 };
+
+module.exports = auth;
