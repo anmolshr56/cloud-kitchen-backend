@@ -1,26 +1,18 @@
 const express = require("express");
-const Menu = require("../models/Menu");
-const authMiddleware = require("../middleware/auth");
-
 const router = express.Router();
 
-/**
- * ADD MENU ITEM (SUPER_ADMIN only)
- * POST /api/menu/add
- */
-router.post("/add", authMiddleware, async (req, res) => {
-  try {
-    const { name, price, category, isAvailable } = req.body;
+const Menu = require("../models/Menu");
+const auth = require("../middleware/authMiddleware");
 
-    if (!name || !price || !category) {
-      return res.status(400).json({ message: "All fields required" });
-    }
+// ✅ ADD MENU ITEM (SUPER ADMIN)
+router.post("/add", auth, async (req, res) => {
+  try {
+    const { name, price, category } = req.body;
 
     const menu = await Menu.create({
       name,
       price,
       category,
-      isAvailable,
     });
 
     res.status(201).json(menu);
@@ -29,30 +21,35 @@ router.post("/add", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET ALL MENU ITEMS
- * GET /api/menu
- */
+// ✅ GET ALL MENU (PUBLIC)
 router.get("/", async (req, res) => {
   try {
-    const menu = await Menu.find().populate("category");
+    const menu = await Menu.find().populate("category", "name");
     res.json(menu);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-/**
- * UPDATE MENU
- * PUT /api/menu/update/:id
- */
-router.put("/update/:id", authMiddleware, async (req, res) => {
+// ✅ UPDATE MENU
+router.put("/update/:id", auth, async (req, res) => {
   try {
-    const menu = await Menu.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
+    const menu = await Menu.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
     res.json(menu);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ DELETE MENU
+router.delete("/delete/:id", auth, async (req, res) => {
+  try {
+    await Menu.findByIdAndDelete(req.params.id);
+    res.json({ message: "Menu deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
