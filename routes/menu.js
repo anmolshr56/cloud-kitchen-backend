@@ -1,42 +1,33 @@
 const express = require("express");
-const router = express.Router();
-
 const Menu = require("../models/Menu");
 const auth = require("../middleware/authMiddleware");
 
-/**
- * ADD MENU ITEM
- */
-router.post("/add", auth, async (req, res) => {
-  try {
-    const { name, price, category } = req.body;
+const router = express.Router();
 
-    if (!name || !price || !category) {
-      return res.status(400).json({ message: "All fields required" });
-    }
-
-    const menu = await Menu.create({
-      name,
-      price,
-      category,
-    });
-
-    res.status(201).json(menu);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+/* ADD MENU */
+router.post("/add", auth(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+  const menu = await Menu.create(req.body);
+  res.status(201).json(menu);
 });
 
-/**
- * GET ALL MENU
- */
+/* UPDATE MENU */
+router.put("/update/:id", auth(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+  const updated = await Menu.findByIdAndUpdate(req.params.id, req.body, {
+    new: true
+  });
+  res.json(updated);
+});
+
+/* DELETE MENU */
+router.delete("/delete/:id", auth(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+  await Menu.findByIdAndDelete(req.params.id);
+  res.json({ message: "Menu deleted" });
+});
+
+/* GET MENU (PUBLIC) */
 router.get("/", async (req, res) => {
-  try {
-    const menu = await Menu.find().populate("category", "name");
-    res.json(menu);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  const menu = await Menu.find({ isAvailable: true }).populate("category");
+  res.json(menu);
 });
 
 module.exports = router;
