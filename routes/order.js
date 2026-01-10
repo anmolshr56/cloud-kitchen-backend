@@ -8,22 +8,23 @@ const auth = require("../middleware/authMiddleware");
  */
 router.post("/place", async (req, res) => {
   try {
-    const { customerName, customerPhone, items } = req.body;
+    const { customerName, customerPhone, customerAddress, items } = req.body;
 
-    if (!customerName || !customerPhone || !items?.length) {
+    if (!customerName || !customerPhone || !customerAddress || !items?.length) {
       return res.status(400).json({ message: "All fields required" });
     }
 
     let totalAmount = 0;
-    items.forEach(item => {
+    items.forEach((item) => {
       totalAmount += item.price * item.quantity;
     });
 
     const order = await Order.create({
       customerName,
       customerPhone,
+      customerAddress, // 👈 NEW
       items,
-      totalAmount
+      totalAmount,
     });
 
     res.status(201).json(order);
@@ -31,6 +32,7 @@ router.post("/place", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 /**
  * GET ALL ORDERS (ADMIN + SUPER_ADMIN)
