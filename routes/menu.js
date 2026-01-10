@@ -94,6 +94,20 @@ router.get("/", async (req, res) => {
   }
 });
 
+/* ================= GET MENU BY CATEGORY (PUBLIC) ✅ NEW ================= */
+router.get("/category/:categoryId", async (req, res) => {
+  try {
+    const menu = await Menu.find({
+      category: req.params.categoryId,
+      isAvailable: true,
+    }).populate("category");
+
+    res.json(menu);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 /* ================= GET ALL MENU (ADMIN) ================= */
 router.get(
   "/all",
