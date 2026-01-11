@@ -5,14 +5,17 @@ const orderSchema = new mongoose.Schema(
     customerName: {
       type: String,
       required: true,
+      trim: true,
     },
     customerPhone: {
       type: String,
       required: true,
+      trim: true,
     },
     customerAddress: {
       type: String,
-      required: true, // 👈 NEW
+      required: true, // ✅ locked
+      trim: true,
     },
     items: [
       {
@@ -21,14 +24,25 @@ const orderSchema = new mongoose.Schema(
           ref: "Menu",
           required: true,
         },
-        name: String,
-        price: Number,
-        quantity: Number,
+        name: {
+          type: String,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
       },
     ],
     totalAmount: {
       type: Number,
       required: true,
+      min: 0,
     },
     status: {
       type: String,
